@@ -16,37 +16,39 @@ func Reverse(data sort.Interface) {
 	}
 }
 
-func Skew(data sort.Interface, k int) {
-	n := data.Len()
-	k %= n
-	if k == 0 || n < 2 {
-		return
-	}
+func Rotate(data sort.Interface, d int) {
+	k := data.Len()
+	d = (k + d) % k
+	Skew(data, 0, d, k-d)
+}
 
-	left := func(u, v, k int) {
-		for i := u; i < v-k; i++ {
+// Skew slides a group of k consecutive elements from index i to index j.
+// i and j respectively represent the source and destination indices of the
+// group's minimum-indexed edge. If j > i, the group will slide toward larger
+// indices, while if j < i, the group will slide toward smaller indices.
+//
+// i, j, and k should all be non-negative integers within the range of
+// [0,n), where n == data.Len().
+func Skew(data sort.Interface, i, j, k int) {
+	if k == 0 || i == j {
+		return
+	} else if j < i {
+		i, j, k = j, j+k, i-j
+	}
+	if j-i < k {
+		// if the block size is larger than the delta...
+		p := k / 2
+		q := k - p
+		Skew(data, i+p, j+p, q)
+		Skew(data, i, j, p)
+	} else if p := (j - i) % k; p != 0 {
+		// if the delta is not evenly divisible by the block size...
+		Skew(data, i, j-p, k)
+		Skew(data, j-p, j, k)
+	} else {
+		for ; i < j; i++ {
 			data.Swap(i, i+k)
 		}
-	}
-	right := func(u, v, k int) {
-		for i := v - 1; i >= u+k; i-- {
-			data.Swap(i, i-k)
-		}
-	}
-
-	if k > n/2 {
-		k -= n
-	} else if k < -n/2 {
-		k += n
-	}
-	p := n % k
-	if k > 0 {
-		right(p, n, k)
-		left(0, k+p, p)
-	} else {
-		k = -k
-		left(0, n-p, k)
-		right(n-k-p, n, p)
 	}
 }
 

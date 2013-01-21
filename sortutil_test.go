@@ -5,6 +5,7 @@
 package sortutil
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -64,8 +65,57 @@ func TestShuffle(t *testing.T) {
 	}
 }
 
-/*
-func TestSkew(t *testing.T) {
-	b := NewLetters(26).ByteSlice
+func TestRotate(t *testing.T) {
+	const n = 29
+	b := NewLetters(n).ByteSlice
+	c := make(ByteSlice, n)
+	d := make(ByteSlice, n)
+	for i := n; i > 0; i-- {
+		b, c, d = b[:i], c[:i], d[:i]
+		for j := -i - 1; j < i+1; j++ {
+			copy(c, b)
+			copy(d, b)
+			j := j % i
+			k := -j
+			if k < 0 {
+				k += i
+			}
+			copy(c, c[k:])
+			copy(c[i-k:], d[:k])
+			Rotate(d, j)
+			same := bytes.Equal([]byte(c), []byte(d))
+			if !same {
+				t.Errorf("%3d %s", j, c)
+				t.Errorf("    %s", d)
+			}
+		}
+	}
 }
-*/
+
+var skewTests = []struct {
+	r       string
+	i, j, k int
+}{
+	{"bcdefghijklma", 0, 12, 1},
+	{"fghijklmabcde", 0, 8, 5},
+	{"abcdeijklfghm", 5, 9, 3},
+	{"abjcdefghik", 2, 3, 7},
+	{"defabcghij", 0, 3, 3},
+	{"hijabcdefg", 7, 0, 3},
+	{"abcdehijfg", 7, 5, 3},
+	{"afgbcde", 1, 3, 4},
+}
+
+func TestSkew(t *testing.T) {
+	for i, v := range skewTests {
+		try := func(p, q int) {
+			b := NewLetters(len(v.r)).ByteSlice
+			Skew(b, p, q, v.k)
+			if string(b) != v.r {
+				t.Errorf("#%2d [%2d %2d %2d] %s", i, p, q, v.k, v.r)
+				t.Errorf("              %s", b)
+			}
+		}
+		try(v.i, v.j)
+	}
+}
