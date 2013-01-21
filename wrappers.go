@@ -39,17 +39,22 @@ func (l *Log) Len() int {
 	if r > 0 {
 		l.p = len(fmt.Sprint(r - 1))
 	}
-	fmt.Fprint(l.W, "Len() [", r, "]\n")
+	fmt.Fprint(l.W, "(", l.I, ").Len() [", r, "]\n")
 	return r
 }
 
 func (l *Log) Less(i, j int) bool {
 	r := l.I.Less(i, j)
-	fmt.Fprintf(l.W, "Less(%*d, %*d) [%v]\n", l.p, i, l.p, j, r)
+	fmt.Fprintf(l.W, "(%v).Less(%*d, %*d) [%v]\n", l.I, l.p, i, l.p, j, r)
 	return r
 }
 
 func (l *Log) Swap(i, j int) {
+	v := fmt.Sprint(l.I)
 	l.I.Swap(i, j)
-	fmt.Fprintf(l.W, "Swap(%*d, %*d)\n", l.p, i, l.p, j)
+	fmt.Fprintf(l.W, "(%v).Swap(%*d, %*d) [%v]\n", v, l.p, i, l.p, j, l.I)
+}
+
+func (l *Log) String() string {
+	return fmt.Sprint(l.I)
 }
