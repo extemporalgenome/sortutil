@@ -10,6 +10,8 @@ import (
 	"sort"
 )
 
+const panicmsg = "bounds out of range"
+
 // Stat wraps sort.Interface, counting the number of Len, Less, and Swap calls.
 // Initialize with `&Stat{I: data}`.
 type Stat struct {
@@ -64,7 +66,7 @@ func (l *Log) String() string {
 // implementation does not need to involve a slice. j may not exceed s.Len().
 func NewSub(s sort.Interface, i, j int) sort.Interface {
 	if i < 0 || j < i || j > s.Len() {
-		panic("bounds out of range")
+		panic(panicmsg)
 	} else if v, ok := s.(sub); ok {
 		// collapse subs of subs
 		return sub{v.s, v.i + i, j - i}
@@ -93,3 +95,30 @@ func NewRev(s sort.Interface) sort.Interface {
 type rev struct{ sort.Interface }
 
 func (r rev) Less(i, j int) bool { return !r.Interface.Less(i, j) }
+
+// NewProxy sorts comp, duplicating all swaps on each item of data.
+// data may be either be empty, or each item must have the same Len as comp.
+func NewProxy(comp sort.Interface, data ...sort.Interface) sort.Interface {
+	l := comp.Len()
+	for _, d := range data {
+		if l != d.Len() {
+			panic(panicmsg)
+		}
+	}
+	return proxy{comp, data}
+}
+
+type proxy struct {
+	c sort.Interface
+	d []sort.Interface
+}
+
+func (p proxy) Len() int           { return p.c.Len() }
+func (p proxy) Less(i, j int) bool { return p.c.Less(i, j) }
+
+func (p proxy) Swap(i, j int) {
+	p.c.Swap(i, j)
+	for _, d := range p.d {
+		d.Swap(i, j)
+	}
+}

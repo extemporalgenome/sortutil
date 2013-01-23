@@ -48,6 +48,18 @@ func TestNewRev(t *testing.T) {
 	}
 }
 
+func TestNewProxy(t *testing.T) {
+	c := sort.IntSlice{0, 9, 1, 8, 2, 7, 3, 6, 4, 5}
+	p := NewLetterSeq(10)
+	q := [10]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	sort.Sort(NewProxy(c, p, sort.IntSlice(q[:])))
+	r1 := p.String() == "acegijhfdb"
+	r2 := q == [10]int{0, 2, 4, 6, 8, 9, 7, 5, 3, 1}
+	if !sort.IsSorted(c) || !r1 || !r2 {
+		t.FailNow()
+	}
+}
+
 func TestStat(t *testing.T) {
 	var (
 		s    = &Stat{I: ByteSlice{0}}
