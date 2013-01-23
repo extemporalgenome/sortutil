@@ -9,6 +9,7 @@ import (
 	"sort"
 )
 
+// Reverse inverts the current order of the provided data.
 func Reverse(data sort.Interface) {
 	n := data.Len()
 	for i := 0; i < n/2; i++ {
@@ -16,6 +17,9 @@ func Reverse(data sort.Interface) {
 	}
 }
 
+// Rotate cycles data by d moves to the right.
+// The d rightmost block of items will be shifted to the front.
+// If d is negative, the shift will be leftward.
 func Rotate(data sort.Interface, d int) {
 	k := data.Len()
 	d = (k + d) % k
@@ -52,6 +56,7 @@ func Skew(data sort.Interface, i, j, k int) {
 	}
 }
 
+// Shuffle sorts data randomly.
 func Shuffle(data sort.Interface) {
 	n := data.Len()
 	// this does not account for second order swapping, so entropy may vary
