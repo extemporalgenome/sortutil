@@ -58,9 +58,5 @@ func Skew(data sort.Interface, i, j, k int) {
 
 // Shuffle sorts data randomly.
 func Shuffle(data sort.Interface) {
-	n := data.Len()
-	// this does not account for second order swapping, so entropy may vary
-	for i, j := range rand.Perm(n) {
-		data.Swap(i, j)
-	}
+	sort.Sort(NewProxy(sort.IntSlice(rand.Perm(data.Len())), data))
 }
