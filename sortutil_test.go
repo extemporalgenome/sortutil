@@ -9,15 +9,23 @@ import (
 	"testing"
 )
 
-func TestNewLetters(t *testing.T) {
-	s := NewLetters(27).String()
+func TestNewIntSeq(t *testing.T) {
+	for i, v := range NewIntSeq(n) {
+		if i != v {
+			t.FailNow()
+		}
+	}
+}
+
+func TestNewLetterSeq(t *testing.T) {
+	s := NewLetterSeq(27).String()
 	if s[:2] != "ab" || s[25:] != "za" {
 		t.Fail()
 	}
 }
 
 func TestLettersMark(t *testing.T) {
-	s := NewLetters(10).Mark(2, 4)
+	s := NewLetterSeq(10).Mark(2, 4)
 	if s[2] != 'C' || s[4] != 'E' || s[5] != 'f' {
 		t.Fail()
 	}
@@ -45,7 +53,7 @@ func TestStat(t *testing.T) {
 }
 
 func TestReverse(t *testing.T) {
-	s := NewLetters(26).ByteSlice
+	s := NewLetterSeq(26).ByteSlice
 	Reverse(s)
 	l := byte(len(s))
 	for i := range s {
@@ -57,7 +65,7 @@ func TestReverse(t *testing.T) {
 }
 
 func TestShuffle(t *testing.T) {
-	b := NewLetters(26).ByteSlice
+	b := NewLetterSeq(26).ByteSlice
 	s := b.String()
 	Shuffle(b)
 	if s == b.String() {
@@ -67,7 +75,7 @@ func TestShuffle(t *testing.T) {
 
 func TestRotate(t *testing.T) {
 	const n = 29
-	b := NewLetters(n).ByteSlice
+	b := NewLetterSeq(n).ByteSlice
 	c := make(ByteSlice, n)
 	d := make(ByteSlice, n)
 	for i := n; i > 0; i-- {
@@ -109,7 +117,7 @@ var skewTests = []struct {
 func TestSkew(t *testing.T) {
 	for i, v := range skewTests {
 		try := func(p, q int) {
-			b := NewLetters(len(v.r)).ByteSlice
+			b := NewLetterSeq(len(v.r)).ByteSlice
 			Skew(b, p, q, v.k)
 			if string(b) != v.r {
 				t.Errorf("#%2d [%2d %2d %2d] %s", i, p, q, v.k, v.r)
