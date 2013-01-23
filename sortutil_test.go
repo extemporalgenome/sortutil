@@ -6,11 +6,12 @@ package sortutil
 
 import (
 	"bytes"
+	"sort"
 	"testing"
 )
 
 func TestNewIntSeq(t *testing.T) {
-	for i, v := range NewIntSeq(n) {
+	for i, v := range NewIntSeq(8) {
 		if i != v {
 			t.FailNow()
 		}
@@ -27,6 +28,14 @@ func TestNewLetterSeq(t *testing.T) {
 func TestLettersMark(t *testing.T) {
 	s := NewLetterSeq(10).Mark(2, 4)
 	if s[2] != 'C' || s[4] != 'E' || s[5] != 'f' {
+		t.Fail()
+	}
+}
+
+func TestNewSub(t *testing.T) {
+	data := [8]int{7, 6, 5, 4, 3, 2, 1, 0}
+	sort.Sort(NewSub(sort.IntSlice(data[:]), 4, 8))
+	if data != [8]int{7, 6, 5, 4, 0, 1, 2, 3} {
 		t.Fail()
 	}
 }

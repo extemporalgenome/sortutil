@@ -58,3 +58,25 @@ func (l *Log) Swap(i, j int) {
 func (l *Log) String() string {
 	return fmt.Sprint(l.I)
 }
+
+// NewSub opaquely wraps a sub-sequence of the provided sort.Interface.
+// NewSub(s,i,j) is semantically equivalent to s[i:j], though the underlying
+// implementation does not need to involve a slice. j may not exceed s.Len().
+func NewSub(s sort.Interface, i, j int) sort.Interface {
+	if i < 0 || j < i || j > s.Len() {
+		panic("bounds out of range")
+	} else if v, ok := s.(sub); ok {
+		// collapse subs of subs
+		return sub{v.s, v.i + i, j - i}
+	}
+	return sub{s, i, j - i}
+}
+
+type sub struct {
+	s    sort.Interface
+	i, n int
+}
+
+func (s sub) Len() int           { return s.n }
+func (s sub) Less(i, j int) bool { return s.s.Less(s.i+i, s.i+j) }
+func (s sub) Swap(i, j int)      { s.s.Swap(s.i+i, s.i+j) }
