@@ -80,3 +80,16 @@ type sub struct {
 func (s sub) Len() int           { return s.n }
 func (s sub) Less(i, j int) bool { return s.s.Less(s.i+i, s.i+j) }
 func (s sub) Swap(i, j int)      { s.s.Swap(s.i+i, s.i+j) }
+
+// NewRev returns a reverse sorter for any sort.Interface.
+// To quickly reverse a sort.Interface relative to its current order, see Reverse.
+func NewRev(s sort.Interface) sort.Interface {
+	if v, ok := s.(rev); ok {
+		return v.Interface
+	}
+	return rev{s}
+}
+
+type rev struct{ sort.Interface }
+
+func (r rev) Less(i, j int) bool { return !r.Interface.Less(i, j) }

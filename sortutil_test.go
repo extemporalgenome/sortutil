@@ -40,6 +40,14 @@ func TestNewSub(t *testing.T) {
 	}
 }
 
+func TestNewRev(t *testing.T) {
+	data := [8]int{0, 1, 2, 3, 4, 5, 6, 7}
+	sort.Sort(NewRev(sort.IntSlice(data[:])))
+	if data != [8]int{7, 6, 5, 4, 3, 2, 1, 0} {
+		t.Fail()
+	}
+}
+
 func TestStat(t *testing.T) {
 	var (
 		s    = &Stat{I: ByteSlice{0}}
