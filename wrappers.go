@@ -97,7 +97,7 @@ type rev struct{ sort.Interface }
 func (r rev) Less(i, j int) bool { return !r.Interface.Less(i, j) }
 
 // NewProxy sorts comp, duplicating all swaps on each item of data.
-// data may be either be empty, or each item must have the same Len as comp.
+// Each item in data must have the same Len as comp.
 func NewProxy(comp sort.Interface, data ...sort.Interface) sort.Interface {
 	l := comp.Len()
 	for _, d := range data {
