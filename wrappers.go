@@ -268,6 +268,7 @@ func Analyze(w io.Writer, verbose bool, f func(sort.Interface)) {
 		{"badcfehgjilknmporqtsvuxwzy", "Pair-Transposition"},
 		{"azcxevgtirkpmnolqjshufwdyb", "Zig-Zag"},
 		{"zaxcvetgripknmlojqhsfudwby", "Desc-Zag-Trans"},
+		{"qogwajmcnisphfldterkvbu", "Shuffle Prime"},
 	}
 	n := len(tests)
 	succ := make([]int, 0, n*2)
