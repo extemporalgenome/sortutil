@@ -7,22 +7,118 @@ package sortutil
 import (
 	"fmt"
 	"io"
+	"math"
 	"sort"
+	"strings"
 )
 
 const panicmsg = "bounds out of range"
 
+// NewLogStat wraps data with Log and Stat.
+// When Log and Stat are used together, Stat should wrap Log. NewLogStat
+// is a convenience function for correctly composing the wrappers.
+func NewLogStat(w io.Writer, data sort.Interface) *Stat {
+	return NewStat(&Log{I: data, W: w})
+}
+
+// NewStat initializes a *Stat for recording per-element call counts.
+// NewStat makes a call to data.Len.
+func NewStat(data sort.Interface) *Stat {
+	l := 0
+	if log, ok := data.(*Log); ok {
+		l = log.I.Len()
+	} else {
+		l = data.Len()
+	}
+	return &Stat{
+		I: data,
+		O: make([]struct{ Less, Swap int }, l),
+	}
+}
+
 // Stat wraps sort.Interface, counting the number of Len, Less, and Swap calls.
-// Initialize with `&Stat{I: data}`.
+// Initialize with `&Stat{I: data}`, or use NewStat to initialize for more
+// comprehensive statistics.
 type Stat struct {
 	I sort.Interface
 	N struct{ Len, Less, Swap int }
+	O []struct{ Less, Swap int }
 }
 
-func (s *Stat) Len() int           { s.N.Len++; return s.I.Len() }
-func (s *Stat) Less(i, j int) bool { s.N.Less++; return s.I.Less(i, j) }
-func (s *Stat) Swap(i, j int)      { s.N.Swap++; s.I.Swap(i, j) }
-func (s *Stat) String() string     { return fmt.Sprintf("%+v", s.N) }
+func (s *Stat) Len() int { s.N.Len++; return s.I.Len() }
+
+func (s *Stat) Less(i, j int) bool {
+	s.N.Less++
+	if s.O != nil {
+		s.O[i].Less++
+		s.O[j].Less++
+	}
+	return s.I.Less(i, j)
+}
+
+func (s *Stat) Swap(i, j int) {
+	s.N.Swap++
+	if s.O != nil {
+		s.O[i].Swap++
+		s.O[j].Swap++
+	}
+	s.I.Swap(i, j)
+}
+
+// StatAggregate contains a summary of element-wise call statistics.
+// Index zero represents Less, while index one represents Swap.
+type StatAggregate [2]struct {
+	Min, Max  int
+	Mean, Std float32
+}
+
+// Aggregate will return aggregate statistics.
+// If the *Stat was not initialized via NewStat, a zero-valued StatAggregate
+// will be returned.
+func (s *Stat) Aggregate() StatAggregate {
+	var a StatAggregate
+	n := len(s.O)
+	if n == 0 {
+		return a
+	}
+	lMean := float32(s.N.Less) / float32(n)
+	sMean := float32(s.N.Swap) / float32(n)
+	lMin, sMin := n, n
+	lMax, sMax := 0, 0
+	for _, v := range s.O {
+		l, s := v.Less, v.Swap
+		std := float32(l) - lMean
+		a[0].Std += std * std
+		std = float32(s) - sMean
+		a[1].Std += std * std
+		if l < lMin {
+			lMin = l
+		}
+		if l > lMax {
+			lMax = l
+		}
+		if s < sMin {
+			sMin = s
+		}
+		if s > sMax {
+			sMax = s
+		}
+	}
+	a[0].Std = float32(math.Sqrt(float64(a[0].Std) / float64(n)))
+	a[1].Std = float32(math.Sqrt(float64(a[1].Std) / float64(n)))
+	a[0].Mean, a[1].Mean = lMean, sMean
+	a[0].Min, a[0].Max, a[1].Min, a[1].Max = lMin, lMax, sMin, sMax
+	return a
+}
+
+// String summarizes the statistical results and, if possible, aggregated results.
+func (s *Stat) String() string {
+	if s.O == nil {
+		return fmt.Sprintf("Calls: %+v", s.N)
+	}
+	a := s.Aggregate()
+	return fmt.Sprintf("Calls: %+v\nLess:  %+v\nSwap:  %+v", s.N, a[0], a[1])
+}
 
 // Mark should produce output with the same visible length that fmt.Sprint
 // would produce when passed the receiver. Within the same alignment
@@ -156,5 +252,60 @@ func (p proxy) Swap(i, j int) {
 	p.c.Swap(i, j)
 	for _, d := range p.d {
 		d.Swap(i, j)
+	}
+}
+
+// Analyze runs preselected datasets through the sorting function f.
+// Any runs that fail to be correctly sorted will be listed first. For each
+// run, if verbose is true or a run fails its Len, Less, and Swap calls will
+// be logged to the provided Writer. In all cases, a summary of call count
+// statistics will be written to the Writer.
+func Analyze(w io.Writer, verbose bool, f func(sort.Interface)) {
+	tests := [][2]string{
+		{"qozxgwajmcnisphfldterkvbuy", "Shuffle"},
+		{"abcdefghijklmnopqrstuvwxyz", "Ascending"},
+		{"zyxwvutsrqponmlkjihgfedcba", "Descending"},
+		{"badcfehgjilknmporqtsvuxwzy", "Pair-Transposition"},
+		{"azcxevgtirkpmnolqjshufwdyb", "Zig-Zag"},
+		{"zaxcvetgripknmlojqhsfudwby", "Desc-Zag-Trans"},
+	}
+	n := len(tests)
+	succ := make([]int, 0, n*2)
+	succ, fail := succ[:0], succ[n:n]
+	var data Letters
+	tlen := 0
+	// Sort failures first
+	for i, v := range tests {
+		data = append(data[:0], v[0]...)
+		title := v[1]
+		if len(title) > tlen {
+			tlen = len(title)
+		}
+		f(data)
+		if sort.IsSorted(data) {
+			succ = append(succ, i)
+		} else {
+			fail = append(fail, i)
+		}
+	}
+	n = len(fail)
+	pad := 4 + 7 + 4
+	banner := strings.Repeat("#", tlen+pad)
+	for i, j := range append(fail, succ...) {
+		v := tests[j]
+		data = append(data[:0], v[0]...)
+		title := v[1]
+		status := "[ OK ]"
+		stat := NewStat(data)
+		switch {
+		case i < n:
+			status = "[FAIL]"
+			fallthrough
+		case verbose:
+			stat.I = &Log{I: data, W: w}
+		}
+		fmt.Fprintf(w, "%s\n### %s %-*s ###\n%s\n", banner, status, tlen, title, banner)
+		f(stat)
+		fmt.Fprint(w, "\n", stat, "\n\n")
 	}
 }
