@@ -82,7 +82,7 @@ func TestStat(t *testing.T) {
 }
 
 func TestReverse(t *testing.T) {
-	s := NewLetterSeq(26).ByteSlice
+	s := NewLetterSeq(26)
 	Reverse(s)
 	l := byte(len(s))
 	for i := range s {
@@ -94,7 +94,7 @@ func TestReverse(t *testing.T) {
 }
 
 func TestShuffle(t *testing.T) {
-	b := NewLetterSeq(26).ByteSlice
+	b := NewLetterSeq(26)
 	s := b.String()
 	Shuffle(b)
 	if s == b.String() {
@@ -104,9 +104,9 @@ func TestShuffle(t *testing.T) {
 
 func TestRotate(t *testing.T) {
 	const n = 29
-	b := NewLetterSeq(n).ByteSlice
-	c := make(ByteSlice, n)
-	d := make(ByteSlice, n)
+	b := NewLetterSeq(n)
+	c := make(Letters, n)
+	d := make(Letters, n)
 	for i := n; i > 0; i-- {
 		b, c, d = b[:i], c[:i], d[:i]
 		for j := -i - 1; j < i+1; j++ {
@@ -146,7 +146,7 @@ var skewTests = []struct {
 func TestSkew(t *testing.T) {
 	for i, v := range skewTests {
 		try := func(p, q int) {
-			b := NewLetterSeq(len(v.r)).ByteSlice
+			b := NewLetterSeq(len(v.r))
 			Skew(b, p, q, v.k)
 			if string(b) != v.r {
 				t.Errorf("#%2d [%2d %2d %2d] %s", i, p, q, v.k, v.r)
