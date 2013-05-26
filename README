@@ -1,5 +1,3 @@
-Documentation: http://godoc.org/github.com/extemporalgenome/sortutil
-
 seq.go contains functions useful for generically manipulating sort.Interface
 implementations. These functions are Reverse, Rotate, Skew, and Shuffle. Skew
 in particular may be useful for prototyping algorithms that shift a block of
