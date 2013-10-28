@@ -195,7 +195,8 @@ func (l *Log) String() string {
 
 // NewSub opaquely wraps a sub-sequence of the provided sort.Interface.
 // NewSub(s,i,j) is semantically equivalent to s[i:j], though the underlying
-// implementation does not need to involve a slice. j may not exceed s.Len().
+// implementation does not need to use a slice.
+// NewSub will panic unless 0 <= i <= j <= s.Len().
 func NewSub(s sort.Interface, i, j int) sort.Interface {
 	if i < 0 || j < i || j > s.Len() {
 		panic(panicmsg)
@@ -229,7 +230,7 @@ type rev struct{ sort.Interface }
 func (r rev) Less(i, j int) bool { return r.Interface.Less(j, i) }
 
 // NewProxy sorts comp, duplicating all swaps on each item of data.
-// Each item in data must have the same Len as comp.
+// NewProxy will panic if any item in data has a different Len() than comp.
 func NewProxy(comp sort.Interface, data ...sort.Interface) sort.Interface {
 	l := comp.Len()
 	for _, d := range data {
