@@ -10,6 +10,7 @@ import (
 )
 
 // Reverse inverts the current order of the provided data.
+// To perform a reverse-sort, see NewRev or sort.Reverse.
 func Reverse(data sort.Interface) {
 	n := data.Len()
 	for i := 0; i < n/2; i++ {
