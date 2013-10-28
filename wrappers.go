@@ -226,7 +226,7 @@ func NewRev(s sort.Interface) sort.Interface {
 
 type rev struct{ sort.Interface }
 
-func (r rev) Less(i, j int) bool { return !r.Interface.Less(i, j) }
+func (r rev) Less(i, j int) bool { return r.Interface.Less(j, i) }
 
 // NewProxy sorts comp, duplicating all swaps on each item of data.
 // Each item in data must have the same Len as comp.
