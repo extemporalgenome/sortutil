@@ -8,3 +8,14 @@ cache-friendly even when migrating small blocks across a great distance.
 containers.go and wrappers.go have types and functions useful for designing,
 debugging, and analyzing the behavior of sorting algorithms compatible with
 the stdlib sort package.
+
+Uniq testing stats (Intel Atom netbook). Uniq has very bad worst case behavior.
+
+BenchmarkUniq_fulldup       1000           1542646 ns/op
+BenchmarkUniq2_fulldup       500           7049922 ns/op
+BenchmarkUniq_altdup        1000           1909168 ns/op
+BenchmarkUniq2_altdup        200           7578948 ns/op
+BenchmarkUniq_partdup       1000           1801414 ns/op
+BenchmarkUniq2_partdup       200           7637064 ns/op
+BenchmarkUniq_nodup            1        2516494660 ns/op
+BenchmarkUniq2_nodup         100          12481222 ns/op

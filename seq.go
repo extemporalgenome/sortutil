@@ -61,3 +61,39 @@ func Skew(data sort.Interface, i, j, k int) {
 func Shuffle(data sort.Interface) {
 	sort.Sort(NewProxy(sort.IntSlice(rand.Perm(data.Len())), data))
 }
+
+// Uniq uses a straightforward fairly low constant factor, n-squared algorithm.
+func Uniq(data sort.Interface) int {
+	k := data.Len() - 1 // k the current last viable item
+	for i := 0; i < k; i++ {
+		for j := i + 1; j < k; j++ {
+			if data.Less(i, j) || data.Less(j, i) {
+				continue
+			}
+			data.Swap(j, k)
+			k-- // decrease threshold
+			j-- // check the swapped-in item
+		}
+		if !data.Less(i, k) && !data.Less(k, i) {
+			k--
+		}
+	}
+	return k + 1
+}
+
+// Uniq2 sorts, then single-pass marks duplicates, then uses sort again to
+// move those to the end. It's nlogn with a high constant factor.
+func Uniq2(data sort.Interface) int {
+	sort.Sort(data)
+	l := data.Len()
+	dup := make(ByteSlice, l)
+	for j := l - 1; j > 0; j-- {
+		i := j - 1
+		if !data.Less(i, j) && !data.Less(j, i) {
+			dup[j] = 1
+			l--
+		}
+	}
+	sort.Sort(NewProxy(dup, data))
+	return l
+}

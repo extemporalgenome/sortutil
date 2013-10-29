@@ -156,3 +156,129 @@ func TestSkew(t *testing.T) {
 		try(v.i, v.j)
 	}
 }
+
+var uniqTests = []struct{ in, unq, dup string }{
+	{"abcdef", "abcdef", ""},
+	{"aabbcc", "abc", "abc"},
+	{"abccba", "abc", "abc"},
+	{"aaaaaa", "a", "aaaaa"},
+}
+
+func TestUniq(t *testing.T) {
+	for i, v := range uniqTests {
+		in := Letters(v.in)
+		k := Uniq(in)
+		unq, dup := in[:k], in[k:]
+		sort.Sort(unq)
+		sort.Sort(dup)
+		if string(unq) != v.unq || string(dup) != v.dup {
+			t.Errorf("#%d %s -> %s:%s != %s:%s", i, in, unq, dup, v.unq, v.dup)
+		}
+	}
+}
+
+func TestUniq2(t *testing.T) {
+	return
+	for i, v := range uniqTests {
+		in := Letters(v.in)
+		k := Uniq2(in)
+		unq, dup := in[:k], in[k:]
+		sort.Sort(unq)
+		sort.Sort(dup)
+		if string(unq) != v.unq || string(dup) != v.dup {
+			t.Errorf("#%d %s -> %s:%s != %s:%s", i, in, unq, dup, v.unq, v.dup)
+		}
+	}
+}
+
+const UniqN = 10000
+
+func BenchmarkUniq_fulldup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		b.StartTimer()
+		Uniq(s)
+	}
+}
+
+func BenchmarkUniq2_fulldup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		b.StartTimer()
+		Uniq2(s)
+	}
+}
+
+func BenchmarkUniq_altdup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		for j := range s {
+			s[j] = j % 2
+		}
+		b.StartTimer()
+		Uniq(s)
+	}
+}
+
+func BenchmarkUniq2_altdup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		for j := range s {
+			s[j] = j % 2
+		}
+		b.StartTimer()
+		Uniq2(s)
+	}
+}
+
+func BenchmarkUniq_partdup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		for j := range s {
+			s[j] = j / (UniqN / 2)
+		}
+		b.StartTimer()
+		Uniq(s)
+	}
+}
+
+func BenchmarkUniq2_partdup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		for j := range s {
+			s[j] = j / (UniqN / 2)
+		}
+		b.StartTimer()
+		Uniq2(s)
+	}
+}
+
+func BenchmarkUniq_nodup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		for j := range s {
+			s[j] = j
+		}
+		b.StartTimer()
+		Uniq(s)
+	}
+}
+
+func BenchmarkUniq2_nodup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		s := make(sort.IntSlice, UniqN)
+		for j := range s {
+			s[j] = j
+		}
+		b.StartTimer()
+		Uniq2(s)
+	}
+}
